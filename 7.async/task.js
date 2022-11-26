@@ -1,43 +1,30 @@
 class AlarmClock {
-  constructor(alarmCollection = [], timerId = null) {
-    this.alarmCollection = alarmCollection;
-    this.timerId = timerId;
+  constructor() {
+    this.alarmCollection = [];
+    this.timerId = null;
   }
 
-  addClock(time, callbackFunction, id) {
-    if (id === undefined) {
+  addClock(time, callback, id) {
+    if (id == undefined) {
       throw new Error(
-        "Невозможно идентифицировать будильник. Параметр id не передан"
+        "Невозможно идентифицировать будильник. Параметр id не передан."
       );
     }
 
-    if (this.timerId == null) {
-      this.timerId = [id];
-      this.alarmCollection.push({
-        id: id,
-        time: time,
-        callback: callbackFunction,
-      });
-    } else if (this.timerId.indexOf(id) == -1) {
-      this.timerId.push(id);
-      this.alarmCollection.push({
-        id: id,
-        time: time,
-        callback: callbackFunction,
-      });
-    } else {
+    if (this.alarmCollection.some((el) => el.id == id)) {
       console.error("Будильник с таким id уже существует.");
+    } else {
+      this.alarmCollection.push({ id: id, time: time, callback: callback });
     }
   }
 
   removeClock(id) {
-    const original_length = this.alarmCollection.length;
+    let originalLength = this.alarmCollection.length;
     this.alarmCollection = this.alarmCollection.filter((el) => el.id != id);
-    this.timerId = this.timerId.filter((el) => el != id);
-    if (original_length > this.alarmCollection.length) {
-      console.log("(Звонок с id", id, "удален)");
+    if (originalLength > this.alarmCollection.length) {
+      return true;
     } else {
-      console.log("Звонка с id", id, "нет в первоначальном массиве");
+      return false;
     }
   }
 
@@ -56,8 +43,8 @@ class AlarmClock {
   }
 
   start() {
-    if (this.intervalId == undefined) {
-      this.intervalId = setInterval(() => {
+    if (this.timerId == undefined) {
+      this.timerId = setInterval(() => {
         let currentTime = this.getCurrentFormattedTime();
         for (let i = 0; i < this.alarmCollection.length; i++) {
           checkClock(this.alarmCollection[i], currentTime);
@@ -67,20 +54,19 @@ class AlarmClock {
 
     function checkClock(alarmData, currentTime) {
       if (alarmData.time == currentTime) {
-        setTimeout(alarmData.callback);
+        alarmData.callback();
       }
     }
   }
 
   stop() {
-    if (this.intervalID != undefined) {
-      clearInterval(this.intervalID);
-    }
+    clearInterval(this.timerId);
+    this.timerId = null;
   }
+
   clearAlarms() {
     this.stop();
     this.alarmCollection = [];
-    this.timerId = null;
   }
 
   printAlarms() {
